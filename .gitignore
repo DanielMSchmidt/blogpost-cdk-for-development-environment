@@ -1,8 +1,3 @@
-*.d.ts
-*.js
-node_modules
-cdktf.out
-cdktf.log
-terraform.tfstate*
-.gen
-.terraform
+node_modules/
+environment/dev/terraform.dev-environment.tfstate
+environment/dev/terraform.dev-environment.tfstate.backup
