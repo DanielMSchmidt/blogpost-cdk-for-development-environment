@@ -67,13 +67,13 @@ function application(name: string, dockerImageName: string, path: string) {
 const backendApp = application(
   "backend",
   "danielmschmidt/backend:latest",
-  resolve(__dirname, "../../backend")
+  resolve(__dirname, "../backend")
 );
 
 const frontendApp = application(
   "frontend",
   "danielmschmidt/frontend:latest",
-  resolve(__dirname, "../../frontend")
+  resolve(__dirname, "../frontend")
 );
 
 class MyStack extends TerraformStack {

@@ -3,11 +3,11 @@
   "version": "1.0.0",
   "description": "",
   "scripts": {
-    "postinstall": "cd environment/dev && npm install",
+    "postinstall": "cd infrastructure && npm install",
     "start": "npm run start:devEnvironment && open http:localhost:1234",
-    "start:devEnvironment": "cd environment/dev && npm start",
+    "start:devEnvironment": "cd infrastructure && npm start",
     "stop": "npm run stop:devEnvironment",
-    "stop:devEnvironment": "cd environment/dev && npm stop"
+    "stop:devEnvironment": "cd infrastructure && npm stop"
   },
   "repository": {
     "type": "git",
