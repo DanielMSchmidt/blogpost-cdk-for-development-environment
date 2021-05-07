@@ -1,3 +1,5 @@
 node_modules/
 environment/dev/terraform.dev-environment.tfstate
 environment/dev/terraform.dev-environment.tfstate.backup
+*.tfstate
+*.tfstate.backup

@@ -1,13 +1,13 @@
 import { Construct } from "constructs";
-import { App, TerraformStack } from "cdktf";
+import { App, RemoteBackend, TerraformStack } from "cdktf";
 import { Container, Image, DockerProvider } from "./.gen/providers/docker";
 import { resolve } from "path";
 
 const USE_LOCAL_APP = Boolean(process.env.USE_LOCAL_APP);
 const ENVIRONMENT = process.env.ENVIRONMENT || "development";
 
-function externalApi(scope: Construct): string {
-  switch (ENVIRONMENT) {
+function externalApi(scope: Construct, environment = ENVIRONMENT): string {
+  switch (environment) {
     case "production":
       return "https://api.artic.edu/api/v1/artworks";
     case "legacy":
@@ -24,11 +24,15 @@ function externalApi(scope: Construct): string {
       });
       return "http://localhost:" + port;
     default:
-      throw "Unknown ENVIRONMENT, use production, legacy, staging, or development";
+      throw "Unknown environment, use production, legacy, staging, or development";
   }
 }
 
-function application(name: string, dockerImageName: string, path: string) {
+function dockerizedApplication(
+  name: string,
+  dockerImageName: string,
+  path: string
+) {
   return function (
     scope: Construct,
     env: Record<string, string>,
@@ -64,29 +68,79 @@ function application(name: string, dockerImageName: string, path: string) {
   };
 }
 
-const backendApp = application(
+const dockerizedBackendApp = dockerizedApplication(
   "backend",
   "danielmschmidt/backend:latest",
   resolve(__dirname, "../backend")
 );
 
-const frontendApp = application(
+const dockerizedFrontendApp = dockerizedApplication(
   "frontend",
   "danielmschmidt/frontend:latest",
   resolve(__dirname, "../frontend")
 );
 
-class MyStack extends TerraformStack {
+class DevelopmentStack extends TerraformStack {
   constructor(scope: Construct, name: string) {
     super(scope, name);
     new DockerProvider(this, "provider", {});
 
     const externalApiUrl = externalApi(this);
-    backendApp(this, { EXTERNAL_API_URL: externalApiUrl }, { 3000: 3000 });
-    frontendApp(this, {}, { 80: 1234 });
+    dockerizedBackendApp(
+      this,
+      { EXTERNAL_API_URL: externalApiUrl },
+      { 3000: 3000 }
+    );
+    dockerizedFrontendApp(this, {}, { 80: 1234 });
+  }
+}
+
+class ProductionStack extends TerraformStack {
+  constructor(scope: Construct, name: string) {
+    super(scope, name);
+
+    const api = externalApi(this, "production");
+
+    console.log(
+      "TODO: implement production infrastructure with external API",
+      api
+    );
+  }
+}
+
+class StagingStack extends TerraformStack {
+  constructor(scope: Construct, name: string) {
+    super(scope, name);
+
+    const api = externalApi(this, "staging");
+
+    console.log(
+      "TODO: implement staging infrastructure with external API",
+      api
+    );
   }
 }
 
 const app = new App();
-new MyStack(app, "dev-environment");
+new DevelopmentStack(app, "development");
+
+
+const production = new ProductionStack(app, "production");
+new RemoteBackend(production, {
+  hostname: "app.terraform.io",
+  organization: "yourorg",
+  workspaces: {
+    name: "yourapp-production",
+  },
+});
+
+const staging = new StagingStack(app, "staging");
+new RemoteBackend(staging, {
+  hostname: "app.terraform.io",
+  organization: "yourorg",
+  workspaces: {
+    name: "yourapp-staging",
+  },
+});
+
 app.synth();
